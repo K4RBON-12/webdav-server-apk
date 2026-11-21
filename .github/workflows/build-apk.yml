@@ -1,9 +1,10 @@
 name: Build APKs
 
 # Runs on GitHub's servers, so no PC / Android Studio is needed.
-# Start it from the "Actions" tab -> "Build APKs" -> "Run workflow".
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   build:
@@ -14,15 +15,16 @@ jobs:
       - name: Apply legacy + wake-lock patch
         run: git apply legacy-wakelock.patch
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
-
-      - name: Install SDK platform and build-tools
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Install SDK platform and build-tools (preinstalled SDK)
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-36" "build-tools;36.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
